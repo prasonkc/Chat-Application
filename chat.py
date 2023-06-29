@@ -29,3 +29,5 @@ while True:
 			sys.stdout.write(message)
 			sys.stdout.flush()
 server.close()
+
+#testing only
