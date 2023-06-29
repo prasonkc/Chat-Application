@@ -20,7 +20,7 @@ print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
 
 
 # keeps listening for a message and whenever a message is received, it broadcasts it to other clients
-def listen_client(cs):
+def listen_for_client(cs):
     while True:
         try:
             # keep listening for message
@@ -34,25 +34,25 @@ def listen_client(cs):
             msg = msg.replace(separator_token, ": ")
 
         # loop over all connected sockets
-        for client_socket in client_sockets:
+        for client in client_sockets:
             # send message
-            client_socket.send(msg.encode())
-
-    while True:
-        #  keep listening for new connections all the time
-        client_socket, client_address = s.accept()
-        print(f"[+] {client_address} connected.")
-
-        # add client to our socket collection
-        client_sockets.add(client_socket)
-
-        # start a new thread, separate thread for separate clients
-        t = Thread(target=listen_client, args=(client_socket,))
-        t.daemon = True
-        t.start()
+            client.send(msg.encode())
 
 
-# close sockets
-for cs in client_sockets:
-    cs.close()
+while True:
+    #  keep listening for new connections all the time
+    client_socket, client_address = s.accept()
+    print(f"[+] {client_address} connected.")
+
+    # add client to our socket collection
+    client_sockets.add(client_socket)
+
+    # start a new thread, separate thread for separate clients
+    t = Thread(target=listen_for_client, args=(client_socket,))
+    t.daemon = True
+    t.start()
+
+    # close sockets
+for c in client_sockets:
+    c.close()
 s.close()
