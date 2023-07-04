@@ -3,7 +3,7 @@ from threading import Thread
 
 # server ip address
 SERVER_HOST = "0.0.0.0"
-SERVER_PORT = 5002
+SERVER_PORT = 8000
 separator_token = "<SEPERATOR>"
 
 # create a socket

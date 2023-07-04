@@ -17,8 +17,8 @@ colors = [Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.LIGHTBLACK_EX,
 client_color = random.choice(colors)
 
 # server's IP address
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 5002
+SERVER_HOST = "0.tcp.ap.ngrok.io"  # tcp server hosted at ngrok or other app
+SERVER_PORT = 16491 # port at tcp server
 separator_token = "<SEP>"
 
 # initialize TCP socket
