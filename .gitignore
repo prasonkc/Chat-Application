@@ -1,2 +1,4 @@
 /Client_side/.idea/
-/Client_side/venv/
+/venv/
+~~
+/Client_side/__pycache__
