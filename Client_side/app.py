@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request,redirect
+from flask import Flask, render_template, request,redirect, session
+from helpers import login_required
 import sqlite3
 import socket
 import random
@@ -36,25 +37,38 @@ app = Flask(__name__)
 con = sqlite3.connect('chats.db', check_same_thread=False)
 db = con.cursor()
 
+
+@login_required
 @app.route("/")
 def index():
     return render_template("index.html")
 
+
+@app.route("/login", methods = ['GET', 'POST'])
+def login():
+    if request.method == "GET":
+        return render_template("login.html")
+    else:
+        usn = request.form.get("username")
+        return redirect("/")
+
+
+
+@login_required
 @app.route("/send", methods=['GET', 'POST'])
 def send():
     if request.method == "GET":
         return
     else:
         # get the message sent by user
-        global msg
         msg = request.form.get('msg')
         print("Sent a message")
         print(msg)
         
-        usn = "prason"
         time_now = datetime.now().strftime('%H:%M:%S')
         # to_send = f"{client_color}[{time_now}] {usn}: {msg}{Fore.RESET}"
         # s.send(to_send.encode())
+        
         
         data = [usn, msg, time_now]
         db.execute("INSERT INTO chat (usn, msg, timestamp) VALUES (?, ?, ?);", data)
