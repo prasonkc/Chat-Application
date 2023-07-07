@@ -1,6 +1,14 @@
 {% extends "layout.html" %}
 
 {% block main %}
+
+    <div class="message you-message" >
+        {% for msg in message %}
+            <span> {{msg}} </span>
+            <br>
+        {% endfor %}
+    </div>
+
     <div class="portlet-footer fixed-bottom .bg-dark">
         <form role="form" method = "post" action = "/send">
             <div class="form-group">

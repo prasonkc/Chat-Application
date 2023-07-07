@@ -39,6 +39,7 @@ def listen_for_client(cs):
             client.send(msg.encode())
 
 
+
 while True:
     #  keep listening for new connections all the time
     client_socket, client_address = s.accept()
@@ -52,7 +53,8 @@ while True:
     t.daemon = True
     t.start()
 
-    # close sockets
+# close sockets
 for c in client_sockets:
     c.close()
 s.close()
+

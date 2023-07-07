@@ -7,7 +7,7 @@ from threading import Thread
 import socket
 import random
 from datetime import datetime
-from colorama import Fore, init, Back
+# from colorama import Fore, init, Back
 
 app = Flask(__name__)
 
@@ -29,16 +29,16 @@ Session(app)
 
 
 # initialize colors
-init()
+# init()
 
-colors = [Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.LIGHTBLACK_EX,
-          Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX, Fore.LIGHTGREEN_EX,
-          Fore.LIGHTMAGENTA_EX, Fore.LIGHTRED_EX, Fore.LIGHTWHITE_EX,
-          Fore.LIGHTYELLOW_EX, Fore.MAGENTA, Fore.RED, Fore.WHITE, Fore.YELLOW
-          ]
+# colors = [Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.LIGHTBLACK_EX,
+#           Fore.LIGHTBLUE_EX, Fore.LIGHTCYAN_EX, Fore.LIGHTGREEN_EX,
+#           Fore.LIGHTMAGENTA_EX, Fore.LIGHTRED_EX, Fore.LIGHTWHITE_EX,
+#           Fore.LIGHTYELLOW_EX, Fore.MAGENTA, Fore.RED, Fore.WHITE, Fore.YELLOW
+#           ]
 
 # choose a random color for the connected client
-client_color = random.choice(colors)
+# client_color = random.choice(colors)
 
 # server's IP address
 
@@ -57,26 +57,29 @@ s.connect((SERVER_HOST, SERVER_PORT))
 print("[+] Connected.")
 
 message = []
-def listen_for_messages():
-# keep listening to client's message
-    while True:
-        msg = s.recv(1024).decode()
-        message.append(msg)
-        print("")
-        print(msg)
-        
 
-# thread to listen for messages
-t = Thread(target=listen_for_messages)
-t.daemon = True
-t.start()
+
+
 
 @app.route("/")
 @login_required
 def index():
-    print(message)
-    return render_template("index.html")
+    def listen_for_messages():
+    # keep listening to client's message
+        while True:
+            msg = s.recv(1024).decode()
+            if msg:
+                message.append(msg)
+                print("")
+                print(msg)
+                return render_template("index.html", message = message)
+    # thread to listen for messages
+    t = Thread(target=listen_for_messages)
+    t.daemon = True
+    t.start()
 
+    print(message)
+    return render_template("index.html", message = message)
 
 usn = []
 @app.route("/login", methods = ['GET', 'POST'])
@@ -106,7 +109,7 @@ def send():
         print(usn)
         
         time_now = datetime.now().strftime('%H:%M:%S')
-        to_send = f"{client_color}[{time_now}] {usn[0]}: {msg}{Fore.RESET}"
+        to_send = f"{usn[0]}: {msg}"
         s.send(to_send.encode())
 
         return redirect("/")
