@@ -1,11 +1,32 @@
 from flask import Flask, render_template, request,redirect, session
+from tempfile import mkdtemp
+from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from helpers import login_required
-import sqlite3
+from flask_session import Session
+from threading import Thread
 import socket
 import random
-from threading import Thread
 from datetime import datetime
 from colorama import Fore, init, Back
+
+app = Flask(__name__)
+
+
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+# Configure session to use filesystem (instead of signed cookies)
+app.config["SESSION_FILE_DIR"] = mkdtemp()
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+
 
 # initialize colors
 init()
@@ -19,37 +40,55 @@ colors = [Fore.BLUE, Fore.CYAN, Fore.GREEN, Fore.LIGHTBLACK_EX,
 # choose a random color for the connected client
 client_color = random.choice(colors)
 
-# # server's IP address
-# SERVER_HOST = "0.0.0.0"  # tcp server hosted at ngrok or other app
-# SERVER_PORT = 8000 # port at tcp server
-# separator_token = "<SEP>"
+# server's IP address
 
-# # initialize TCP socket
-# s = socket.socket()
-# print(f"[*] Connecting to {SERVER_HOST}:{SERVER_PORT}...")
-
-# # connect to the server
-# s.connect((SERVER_HOST, SERVER_PORT))
-# print("[+] Connected.")
-
-# set up sqlite database
-app = Flask(__name__)
-con = sqlite3.connect('chats.db', check_same_thread=False)
-db = con.cursor()
+SERVER_HOST = "0.0.0.0"  # tcp server hosted at ngrok or other app
+SERVER_PORT = 8000 # port at tcp server
+separator_token = "<SEP>"
 
 
-@login_required
+# initialize TCP socket
+s = socket.socket()
+
+print(f"[*] Connecting to {SERVER_HOST}:{SERVER_PORT}...")
+
+# connect to the server
+s.connect((SERVER_HOST, SERVER_PORT))
+print("[+] Connected.")
+
+message = []
+def listen_for_messages():
+# keep listening to client's message
+    while True:
+        msg = s.recv(1024).decode()
+        message.append(msg)
+        print("")
+        print(msg)
+        
+
+# thread to listen for messages
+t = Thread(target=listen_for_messages)
+t.daemon = True
+t.start()
+
 @app.route("/")
+@login_required
 def index():
+    print(message)
     return render_template("index.html")
 
 
+usn = []
 @app.route("/login", methods = ['GET', 'POST'])
 def login():
+    session.clear()
+    
     if request.method == "GET":
         return render_template("login.html")
     else:
-        usn = request.form.get("username")
+        username = request.form.get("username")
+        usn.append(username)
+        session["user_id"] = 1
         return redirect("/")
 
 
@@ -64,13 +103,10 @@ def send():
         msg = request.form.get('msg')
         print("Sent a message")
         print(msg)
+        print(usn)
         
         time_now = datetime.now().strftime('%H:%M:%S')
-        # to_send = f"{client_color}[{time_now}] {usn}: {msg}{Fore.RESET}"
-        # s.send(to_send.encode())
-        
-        
-        data = [usn, msg, time_now]
-        db.execute("INSERT INTO chat (usn, msg, timestamp) VALUES (?, ?, ?);", data)
+        to_send = f"{client_color}[{time_now}] {usn[0]}: {msg}{Fore.RESET}"
+        s.send(to_send.encode())
 
         return redirect("/")
